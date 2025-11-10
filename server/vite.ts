@@ -27,11 +27,9 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  // Dynamic imports to avoid bundling vite in production build
+  // Dynamic import of vite to avoid bundling it in production
   const { createServer: createViteServer, createLogger } = await import("vite");
   const viteConfig = (await import("../vite.config")).default;
-  
-  const viteLogger = createLogger();
   
   const serverOptions = {
     middlewareMode: true,
@@ -39,6 +37,7 @@ export async function setupVite(app: Express, server: Server) {
     allowedHosts: true as const,
   };
 
+  const viteLogger = createLogger();
   const vite = await createViteServer({
     ...viteConfig,
     configFile: false,
