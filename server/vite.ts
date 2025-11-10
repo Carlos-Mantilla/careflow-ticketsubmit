@@ -28,29 +28,53 @@ export function log(message: string, source = "express") {
 
 export async function setupVite(app: Express, server: Server) {
   // Dynamic import of vite to avoid bundling it in production
-  const { createServer: createViteServer, createLogger } = await import("vite");
-  const viteConfig = (await import("../vite.config")).default;
+  // Only import vite in development - this function should never be called in production
+  let vite: any;
   
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { server },
-    allowedHosts: true as const,
-  };
+  try {
+    const viteModule = await import("vite");
+    const { createServer: createViteServer, createLogger } = viteModule;
+    
+    const serverOptions = {
+      middlewareMode: true,
+      hmr: { server },
+      allowedHosts: true as const,
+    };
 
-  const viteLogger = createLogger();
-  const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
-    customLogger: {
-      ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
+    const viteLogger = createLogger();
+    
+    // Create minimal vite config inline to avoid importing vite.config.ts which imports vite
+    const viteConfig = {
+      root: path.resolve(__dirname, "..", "client"),
+      resolve: {
+        alias: {
+          "@": path.resolve(__dirname, "..", "client", "src"),
+          "@shared": path.resolve(__dirname, "..", "shared"),
+          "@assets": path.resolve(__dirname, "..", "attached_assets"),
+        },
       },
-    },
-    server: serverOptions,
-    appType: "custom",
-  });
+      plugins: [
+        // Only load essential plugins for dev server
+        (await import("@vitejs/plugin-react")).default(),
+      ],
+    };
+    
+    vite = await createViteServer({
+      ...viteConfig,
+      configFile: false,
+      customLogger: {
+        ...viteLogger,
+        error: (msg, options) => {
+          viteLogger.error(msg, options);
+          process.exit(1);
+        },
+      },
+      server: serverOptions,
+      appType: "custom",
+    });
+  } catch (error) {
+    throw new Error(`Failed to load Vite in development mode: ${error instanceof Error ? error.message : String(error)}`);
+  }
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
