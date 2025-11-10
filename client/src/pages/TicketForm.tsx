@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Command,
   CommandEmpty,
@@ -60,6 +65,17 @@ export default function TicketForm() {
   });
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch contacts with "won" tag
   const { data: contactsData, isLoading: isLoadingContacts } = useQuery<{ contacts: Contact[] }>({
@@ -167,6 +183,56 @@ export default function TicketForm() {
     }));
   };
 
+  // Shared Command content for client search
+  const renderCommandContent = () => (
+    <Command shouldFilter={false}>
+      <CommandInput
+        placeholder="Buscar cliente..."
+        value={clientSearchQuery}
+        onValueChange={setClientSearchQuery}
+      />
+      <CommandList>
+        <CommandEmpty>
+          {isLoadingContacts ? "Cargando..." : "No se encontraron clientes."}
+        </CommandEmpty>
+        <CommandGroup>
+          {filteredContacts.map((contact) => (
+            <CommandItem
+              key={contact.id}
+              value={`${contact.contactName} ${contact.companyName} ${contact.email} ${contact.phone}`}
+              onSelect={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  clienteId: contact.id,
+                  clienteNombre: contact.contactName || contact.companyName || "",
+                }));
+                setClientSearchOpen(false);
+                setClientSearchQuery("");
+              }}
+            >
+              <Check
+                className={cn(
+                  "mr-2 h-4 w-4",
+                  formData.clienteId === contact.id
+                    ? "opacity-100"
+                    : "opacity-0"
+                )}
+              />
+              <div className="flex flex-col">
+                <span>{contact.contactName || contact.companyName}</span>
+                {contact.companyName && contact.contactName && (
+                  <span className="text-xs text-muted-foreground">
+                    {contact.companyName}
+                  </span>
+                )}
+              </div>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
@@ -205,75 +271,48 @@ export default function TicketForm() {
               <Label htmlFor="cliente">
                 Cliente <span className="text-red-500">*</span>
               </Label>
-              <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={clientSearchOpen}
-                    className="w-full justify-between"
+              
+              {isMobile ? (
+                <Dialog open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={clientSearchOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.clienteNombre || "Selecciona un cliente..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-[calc(100vw-2rem)] p-0 sm:max-w-[400px] top-[20%] translate-y-0">
+                    {renderCommandContent()}
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={clientSearchOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.clienteNombre || "Selecciona un cliente..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-[400px] p-0" 
+                    align="start"
+                    side="bottom"
+                    sideOffset={8}
+                    avoidCollisions={false}
                   >
-                    {formData.clienteNombre || "Selecciona un cliente..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent 
-                  className="w-[calc(100vw-2rem)] max-w-[400px] p-0" 
-                  align="start"
-                  side="bottom"
-                  sideOffset={8}
-                  avoidCollisions={true}
-                  collisionPadding={{ top: 16, bottom: 200, left: 16, right: 16 }}
-                  sticky="always"
-                >
-                  <Command shouldFilter={false}>
-                    <CommandInput
-                      placeholder="Buscar cliente..."
-                      value={clientSearchQuery}
-                      onValueChange={setClientSearchQuery}
-                    />
-                    <CommandList>
-                      <CommandEmpty>
-                        {isLoadingContacts ? "Cargando..." : "No se encontraron clientes."}
-                      </CommandEmpty>
-                      <CommandGroup>
-                        {filteredContacts.map((contact) => (
-                          <CommandItem
-                            key={contact.id}
-                            value={`${contact.contactName} ${contact.companyName} ${contact.email} ${contact.phone}`}
-                            onSelect={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                clienteId: contact.id,
-                                clienteNombre: contact.contactName || contact.companyName || "",
-                              }));
-                              setClientSearchOpen(false);
-                              setClientSearchQuery("");
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                formData.clienteId === contact.id
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            <div className="flex flex-col">
-                              <span>{contact.contactName || contact.companyName}</span>
-                              {contact.companyName && contact.contactName && (
-                                <span className="text-xs text-muted-foreground">
-                                  {contact.companyName}
-                                </span>
-                              )}
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                    {renderCommandContent()}
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
 
             {/* Descripción */}
