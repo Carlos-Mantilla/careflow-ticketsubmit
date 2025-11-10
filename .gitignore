@@ -1,0 +1,25 @@
+# dependencias y builds
+node_modules
+dist/
+client/dist/
+.migrations/        
+migrations/         
+
+# entorno y credenciales
+.env
+.env.*
+!.env.example       
+
+# logs y temporales
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.log
+temp/
+tmp/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+.local/
