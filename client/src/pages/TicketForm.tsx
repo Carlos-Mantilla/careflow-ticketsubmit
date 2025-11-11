@@ -170,17 +170,32 @@ export default function TicketForm() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
     setFormData((prev) => ({
       ...prev,
       attachments: [...prev.attachments, ...files],
     }));
+
+    // Reset input so the same files can be selected again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const removeAttachment = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) => {
+      const updatedAttachments = prev.attachments.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        attachments: updatedAttachments,
+      };
+    });
+
+    // Reset the file input so the label clears and the same file can be re-selected
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   // Shared Command content for client search
@@ -344,7 +359,7 @@ export default function TicketForm() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an option ..." />
+                  <SelectValue placeholder="Selecciona una opcion..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="P1">P1</SelectItem>
@@ -364,8 +379,19 @@ export default function TicketForm() {
                   type="file"
                   multiple
                   onChange={handleFileChange}
-                  className="cursor-pointer"
+                  className="hidden"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-center gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  {formData.attachments.length > 0
+                    ? `${formData.attachments.length} archivo${formData.attachments.length > 1 ? "s" : ""} seleccionado${formData.attachments.length > 1 ? "s" : ""}`
+                    : "Seleccionar archivos"}
+                </Button>
                 {formData.attachments.length > 0 && (
                   <div className="space-y-2">
                     {formData.attachments.map((file, index) => (

@@ -612,13 +612,22 @@ export class GHLService {
       // Si hay un searchQuery, filtrar ANTES de mapear para buscar en todos los campos originales
       let contactsToMap = allContacts;
       if (searchQuery && searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
+        const normalizeString = (value: string) =>
+          value
+            .toLowerCase()
+            .normalize("NFD")
+            // Remove combining diacritical marks without requiring Unicode flags
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+
+        const query = normalizeString(searchQuery);
+        const tokens = query.split(/\s+/).filter(Boolean);
         const beforeFilter = allContacts.length;
         
         // Filtrar en el objeto original de GHL para buscar en TODOS los campos posibles
         contactsToMap = allContacts.filter((contact: any) => {
           // Buscar en todos los campos posibles del contacto original
-          const searchableText = [
+          const searchableFields = [
             contact.contactName,
             contact.name,
             contact.firstName,
@@ -628,12 +637,12 @@ export class GHLService {
             contact.companyName,
             // También buscar en campos anidados si existen
             contact.customFields ? JSON.stringify(contact.customFields) : '',
-          ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase();
+          ].filter(Boolean);
+
+          const searchableText = normalizeString(searchableFields.join(" "));
           
-          return searchableText.includes(query);
+          // Para mejorar la coincidencia parcial, asegurarnos de que todos los tokens aparezcan
+          return tokens.every((token) => searchableText.includes(token));
         });
         
         console.log(`🔍 Filtrado por "${searchQuery}": ${beforeFilter} → ${contactsToMap.length} contactos`);
