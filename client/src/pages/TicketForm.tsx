@@ -436,8 +436,8 @@ export default function TicketForm() {
                 rows={5}
                 className="resize-none"
               />
-              <p className="text-xs text-muted-foreground">
-                Ej: El Dr reporta que el bot no responde a ningun paciente. Luego de revisar las ultimas conversaciones veo que los contactos no tiene el tag de bot_off y el whatsapp esta conectado.
+              <p className="text-xs text-pink-500">
+                <strong>Ejemplo:</strong> El Dr reporta que el bot no responde a ningun paciente. Luego de revisar las ultimas conversaciones veo que los contactos no tiene el tag de bot_off y el whatsapp esta conectado.
               </p>
             </div>
 
@@ -472,7 +472,7 @@ export default function TicketForm() {
             {/* Adjuntos */}
             <div className="space-y-2">
               <Label htmlFor="attachments">Adjuntos</Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-pink-500">
                 Agrega una captura de la conversación con problema y aparte otra captura con el mensaje del Dr si aplica.
               </p>
               <div className="space-y-2">
