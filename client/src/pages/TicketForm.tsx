@@ -320,6 +320,9 @@ export default function TicketForm() {
                   <SelectItem value="Soporte Técnico">Soporte Técnico</SelectItem>
                   <SelectItem value="Facturación">Facturación</SelectItem>
                   <SelectItem value="Videollamada">Videollamada</SelectItem>
+                  <SelectItem value="Customer Success - Sonia">
+                    Customer Success - Sonia
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

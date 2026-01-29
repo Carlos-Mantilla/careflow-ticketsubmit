@@ -2,6 +2,9 @@
 
 Aplicación web para crear y gestionar tickets de soporte para clientes Careflow.
 
+## Dependencias
+Este repo depende para su funcionamiento de un flujo en n8n que está en el server de producción. Puedes verlo en [este enlace de n8n](https://automation.gotiger.ai/workflow/Oe9lZdPnRV1rQdwO).
+
 ## Características
 
 - **Creación de tickets**: Formulario para crear tickets con categoría, cliente, descripción y prioridad
