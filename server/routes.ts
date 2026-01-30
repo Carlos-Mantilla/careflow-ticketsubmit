@@ -496,12 +496,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit ticket endpoint
   app.post("/api/tickets", upload.array('attachments', 10), async (req, res) => {
     try {
-      const { categoria, clienteId, descripcion, prioridad } = req.body;
+      const { categoria, clienteId, descripcion, prioridad, telefonoContacto } = req.body;
       
       // Validate required fields
-      if (!categoria || !clienteId || !descripcion || !prioridad) {
+      if (!categoria || !clienteId || !descripcion || !prioridad || !telefonoContacto) {
         return res.status(400).json({ 
-          error: "categoria, clienteId, descripcion, and prioridad are required" 
+          error: "categoria, clienteId, telefonoContacto, descripcion, and prioridad are required" 
         });
       }
 
@@ -523,6 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         json: {
           "Categoría": categoria,
           "Cliente": req.body.clienteNombre || '',
+          "Teléfono del Contacto": telefonoContacto,
           "customerId": clienteId, // GHL contact ID
           "Descripción": descripcion,
           "Prioridad": prioridad,
